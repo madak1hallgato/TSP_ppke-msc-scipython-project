@@ -5,11 +5,12 @@ from dataclasses import dataclass, field
 import numpy as np
 import json
 
-# Create exception for the Map class
+# Create exceptions for the Map class
 class NoCityFoundError(Exception): pass
 class NoDistanceFoundError(Exception): pass
 class InvalidCityActivationError(Exception): pass
 class InvalidCityDeactivationError(Exception): pass
+class MapIsNotCompleteGraphError(Exception): pass
 
 # City data class
 # - This data class store the city name and the coordinates
@@ -53,8 +54,7 @@ class Map:
     # - Else return with the desired city
     def get_city_by_city_name(self, city_name: str) -> City:
         target_city = next((city for city in self.cities if city.name == city_name), None)
-        if target_city == None: 
-            raise NoCityFoundError(f"No city found with the name '{city_name}'!")
+        if target_city == None: raise NoCityFoundError(f"No city found with the name '{city_name}'!")
         return target_city
 
     # Active city getter (by name)
@@ -63,8 +63,7 @@ class Map:
     # - Else return with the desired active city
     def get_active_city_by_city_name(self, active_city_name: str) -> City:
         target_active_city = next((active_city for active_city in self.active_cities if active_city.name == active_city_name), None)
-        if target_active_city == None: 
-            raise NoCityFoundError(f"No active city found with the name '{active_city_name}'!")
+        if target_active_city == None: raise NoCityFoundError(f"No active city found with the name '{active_city_name}'!")
         return target_active_city
     
     # Distance getter (by two city names)
@@ -94,7 +93,7 @@ class Map:
         try: 
             target_city = self.get_city_by_city_name(city_name=city_name)
         except NoCityFoundError as e:
-            error = f"Cannot be activated the city with the name'{city_name}'!"
+            error = f"The city cannot be activated with the name'{city_name}'!"
             trigger = f"Invalid city name provided! {e}"
             raise InvalidCityActivationError(error, trigger)
         self.active_cities.add(target_city)
@@ -105,19 +104,23 @@ class Map:
 
     # Deactivate a city (by name)
     # - Try to find the city (from active cities)
-    # - If no match, then give a InvalidCityDeactivationError
-    # - Else remove the city from the active cities set
-    # - Then remove the distances between the removed active city and the remaining active cities
-    def deactivate_city(self, active_city_name: str) -> None:
+    #   - If match, then remove the city from the active cities set
+    #   - Then remove the distances between the removed active city and the remaining active cities
+    # - If no match, then try to find the city (from all cities)
+    #   - If again no match, then give a InvalidCityDeactivationError
+    def deactivate_city(self, city_name: str) -> None:
         try: 
-            target_active_city = self.get_active_city_by_city_name(active_city_name=active_city_name)
-        except NoCityFoundError as e:
-            error = f"Cannot be deactivated the city with the name'{active_city_name}'!"
-            trigger = f"Invalid active city name provided! {e}"
-            raise InvalidCityDeactivationError(error, trigger)
-        self.active_cities.remove(target_active_city)
-        target_distances = {dist for dist in self.distances if target_active_city in {dist.city_a, dist.city_b}}
-        self.distances -= target_distances
+            target_active_city = self.get_active_city_by_city_name(active_city_name=city_name)
+            self.active_cities.remove(target_active_city)
+            target_distances = {dist for dist in self.distances if target_active_city in {dist.city_a, dist.city_b}}
+            self.distances -= target_distances
+        except NoCityFoundError:
+            try:
+                self.get_city_by_city_name(city_name=city_name)
+            except NoCityFoundError as e:
+                error = f"The city cannot be deactivated with the name'{city_name}'!"
+                trigger = f"Invalid city name provided! {e}"
+                raise InvalidCityDeactivationError(error, trigger)
 
     # Activate all cities
     # - Collect the city names (from all cities)
@@ -133,39 +136,41 @@ class Map:
     def deactivate_all(self) -> None:
         active_city_names = [active_city.name for active_city in self.active_cities]
         for active_city_name in active_city_names: 
-            self.deactivate_city(active_city_name=active_city_name)
+            self.deactivate_city(city_name=active_city_name)
 
-    # Activate n random city (where n is the number of cities to activate)
+    # Activate n random city (by number of cities and an optional specific city to activate )
+    # - If the given city number is Zero, then nothing to do
     # - Collect the city names (from all cities)
-    # - Check the given city number is smaller (or equal) then zero
-    # - If it is smaller or equal, then the city number will be one
+    # - Check the given city number is smaller then zero
+    #   - If it is smaller, then give a InvalidCityActivationError
     # - Check the given city number is greater then the all cities size
-    # - If it is greater, then the city number will be equal to the size of the cities set
-    # - Then call the activate function for each city name
-    def activate_n_random_city(self, city_num: int) -> None:
+    #   - If it is greater, then give a InvalidCityActivationError
+    # - If a specific city was given, then acticated that city
+    # - Then call the activate function for each city name (-1 times, if a city was activated already)
+    def activate_n_random_city(self, city_num: int, specific_city_name: str = None) -> None:
+        if city_num == 0: return
         all_city_name = [city.name for city in self.cities]
-        if city_num <= 0:
-            print("activate_n_random_city - W: city_num is smaller (or equal) then zero -> city_num = 1")
-            city_num = 1
-        if city_num > len(all_city_name):
-            print("activate_n_random_city - W: city_num is greater then the number of the cities -> city_num = number of the cities")
-            city_num = len(all_city_name)
-        for i in range(city_num):
-            self.activate_city(city_name=all_city_name[i])
+        if city_num < 0: 
+            raise InvalidCityActivationError("Cannot activate the cities! The city_num is smaller then zero!")
+        if city_num > len(all_city_name): 
+            raise InvalidCityActivationError("Cannot activate the cities! The city_num is greater then the number of the cities!")
+        if specific_city_name != None: 
+            try: self.activate_city(city_name=specific_city_name)
+            except NoCityFoundError as e: raise InvalidCityActivationError(f"Cannot activate the cities! {e}")
+        it = 0
+        while len(self.active_cities) != city_num:
+            self.activate_city(city_name=all_city_name[it])
+            it += 1
 
     # Check completeness
     # - Check distance between active cities one-by-one
-    # - If there are distances between all active cities then return True
-    # - Else return False
-    def check_completeness(self) -> bool:
+    # - If there is no distances between any two active cities, then give a MapIsNotCompleteGraphError
+    def check_completeness(self):
         for city_a in self.active_cities:
             for city_b in self.active_cities:
                 if city_a != city_b:
-                    try:
-                        self.get_dist_by_city_names(city_a.name, city_b.name)
-                    except NoDistanceFoundError:
-                        return False
-        return True
+                    try: self.get_dist_by_city_names(city_a.name, city_b.name)
+                    except NoDistanceFoundError as e: raise MapIsNotCompleteGraphError(f"The map is not complete! {e}")
 
     # Print cities
     # - It print the details of the cities to the console
@@ -199,7 +204,7 @@ class MapFileManager:
 
     # Constructor (with file path)
     # - Store the file path in a class variable
-    # - And set the map file, map class variables to none
+    # - And set the map file and map class variables to none
     def __init__(self, file_path: str) -> None:
         self.file_path = file_path
         self.map_file = None
@@ -233,7 +238,5 @@ class MapFileManager:
     # - Return with the map
     # - If the map is None, then create the map
     def get_map(self) -> Map:
-        if self.map == None:
-            print("get_map - W: No map found -> Creat map from file")
-            self.create_map_from_file()
+        if self.map == None: self.create_map_from_file()
         return self.map

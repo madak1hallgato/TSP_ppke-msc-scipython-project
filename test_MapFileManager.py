@@ -46,13 +46,9 @@ class TestMapFileManager(unittest.TestCase):
 
     def test_get_map_with_and_without_create(self):
         with MapFileManager(file_path=self.test_file_path) as map_file_manager:
-            map_file_manager.create_map_from_file()
-            result_with = map_file_manager.get_map()
-        with MapFileManager(file_path=self.test_file_path) as map_file_manager:
             result_without = map_file_manager.get_map()
-        self.assertIsNotNone(result_with)
         self.assertIsNotNone(result_without)
-        self.assertEqual(len(result_with.cities), len(result_without.cities))
+        self.assertEqual(len(result_without.cities), 2)
 
 if __name__ == "__main__":
     unittest.main()

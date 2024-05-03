@@ -3,6 +3,7 @@ import unittest
 from map import Map, City
 from map import NoCityFoundError, NoDistanceFoundError
 from map import InvalidCityActivationError, InvalidCityDeactivationError
+from map import MapIsNotCompleteGraphError
 
 class TestMap(unittest.TestCase):
 
@@ -62,14 +63,15 @@ class TestMap(unittest.TestCase):
             self.map.get_dist_by_city_names("City1", "City1")
 
     def test_activate_city(self):
-        self.map.deactivate_all()
         self.map.activate_city("City1")
         self.assertIn(self.city1, self.map.active_cities)
+        self.assertEqual(len(self.map.active_cities),1)
 
     def test_activate_active_city(self):
         self.map.activate_all()
         self.map.activate_city("City1")
         self.assertIn(self.city1, self.map.active_cities)
+        self.assertEqual(len(self.map.active_cities),3)
 
     def test_activate_invalid_city(self):
         with self.assertRaises(InvalidCityActivationError):
@@ -79,6 +81,7 @@ class TestMap(unittest.TestCase):
         self.map.activate_all()
         self.map.deactivate_city("City1")
         self.assertNotIn(self.city1, self.map.active_cities)
+        self.assertEqual(len(self.map.active_cities),2)
 
     def test_deactivate_invalid_city(self):
         self.map.activate_all()
@@ -88,24 +91,71 @@ class TestMap(unittest.TestCase):
     def test_deactivate_inactive_city(self):
         self.map.activate_all()
         self.map.deactivate_city("City1")
-        with self.assertRaises(InvalidCityDeactivationError):
-            self.map.deactivate_city("City1")
-
-    def test_activate_n_random_city(self):
+        self.map.deactivate_city("City1")
+        self.assertNotIn(self.city1, self.map.active_cities)
+        self.assertEqual(len(self.map.active_cities),2)
+        
+    def test_activate_one_random_city(self):
         self.map.activate_n_random_city(1)
         self.assertEqual(len(self.map.active_cities), 1)
 
+    def test_activate_three_random_city(self):
+        self.map.activate_n_random_city(3)
+        self.assertEqual(len(self.map.active_cities), 3)
+
     def test_activate_zero_random_city(self):
         self.map.activate_n_random_city(0)
-        self.assertEqual(len(self.map.active_cities), 1)
+        self.assertEqual(len(self.map.active_cities), 0)
 
-    def test_activate_five_random_city(self):
-        self.map.activate_n_random_city(5)
-        self.assertEqual(len(self.map.active_cities), len(self.map.cities))
+    def test_activate_four_random_city(self):
+        with self.assertRaises(InvalidCityActivationError):
+            self.map.activate_n_random_city(4)
+        
+    def test_activate_minus_random_city(self):
+        with self.assertRaises(InvalidCityActivationError):
+            self.map.activate_n_random_city(-1)
+
+    def test_activate_zero_random_city_with_specific_city(self):
+        self.map.activate_n_random_city(0, "City1")
+        self.assertNotIn(self.city1, self.map.active_cities)
+        self.assertEqual(len(self.map.active_cities), 0)
+
+    def test_activate_one_random_city_with_specific_city(self):
+        for _ in range(100):
+            self.map.activate_n_random_city(1, "City1")
+            self.assertIn(self.city1, self.map.active_cities)
+            self.map.deactivate_all()
+
+    def test_activate_one_random_city_with_invalid_specific_city(self):
+        with self.assertRaises(InvalidCityActivationError):
+            self.map.activate_n_random_city(1, "City4")
 
     def test_check_completeness(self):
+        self.map.check_completeness()
+
+    def test_check_completeness_after_activate_city(self):
+        self.map.activate_city("City1")
+        self.map.check_completeness()
+        
+    def test_check_completeness_after_activate_all(self):
         self.map.activate_all()
-        self.assertTrue(self.map.check_completeness())
+        self.map.check_completeness()
+
+    def test_check_completeness_after_deactivate_city(self):
+        self.map.activate_all()
+        self.map.deactivate_city("City1")
+        self.map.check_completeness()
+        
+    def test_check_completeness_after_deactivate_all(self):
+        self.map.activate_all()
+        self.map.deactivate_all()
+        self.map.check_completeness()
+
+    def test_check_completeness_after_forced_activation(self):
+        self.map.activate_all()
+        self.map.active_cities.add(City(name="City4", coord_x=8, coord_y=8))
+        with self.assertRaises(MapIsNotCompleteGraphError):
+            self.map.check_completeness()
 
 if __name__ == "__main__":
     unittest.main()
