@@ -7,9 +7,8 @@ with MapFileManager(file_path="cities.json") as map_file_manager:
     map_file_manager.create_map_from_file()
     complete_map = map_file_manager.get_map()
 
-city_num = random.randint(2, 8)
-complete_map.activate_n_random_city(city_num=city_num)
-complete_map.activate_city("New York")
+city_num = random.randint(2, 9)
+complete_map.activate_n_random_city(city_num=city_num, specific_city_name="New York")
 
 tsp_solver = TSP(complete_map=complete_map, start_city_name="New York")
 

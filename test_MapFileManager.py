@@ -37,12 +37,12 @@ class TestMapFileManager(unittest.TestCase):
         with map_file_manager: pass
         self.assertTrue(map_file_manager.map_file.closed)
         
-    def create_map_from_file_and_get_map(self):
+    def test_create_map_from_file_and_get_map(self):
         with MapFileManager(file_path=self.test_file_path) as map_file_manager:
             map_file_manager.create_map_from_file()
             result = map_file_manager.get_map()
-            self.assertIsNotNone(result)
-            self.assertEqual(len(result.cities), 2)
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result.cities), 2)
 
     def test_get_map_with_and_without_create(self):
         with MapFileManager(file_path=self.test_file_path) as map_file_manager:

@@ -1,6 +1,6 @@
 import unittest
 
-# Import all your test modules
+# Import all our test modules
 from test_Map import TestMap
 from test_MapFileManager import TestMapFileManager
 from test_TSP import TestTSP
