@@ -14,6 +14,20 @@ The Brute Force method is a straightforward approach to solve the TSP by conside
 
 Genetic Algorithms (GAs) are population-based optimization techniques inspired by the process of natural selection and evolution. They are particularly useful for solving complex optimization problems like the TSP.
 
+## Diagrams
+
+### Class Diagram
+
+<p align="center">
+   <img src="images/class_diagramm.png" width="90%" />
+</p>
+
+### Sequence Diagram
+
+<p align="center">
+   <img src="images/sequence_diagramm.png" width="90%" /> 
+</p>
+
 ## Dependencies
 
 Before running the program, ensure you have the following modules installed:
