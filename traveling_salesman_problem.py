@@ -148,13 +148,13 @@ class TSP:
     # Stop solver
     # - Set the stop calculation variable to true
     # - Set the stop calculation variable to true for the GA
-    def stop_solver(self):
+    def stop_solver(self) -> None:
         self.stop_calculation = True
         self.ga_solver.stop_calculation = True
 
     # Estimated remaining time getter
     # - Always get the correct Estimated remaining time
-    def get_estimated_remaining_time(self):
+    def get_estimated_remaining_time(self) -> float:
         if self.estimated_remaining_time > self.ga_solver.estimated_remaining_time:
             return self.estimated_remaining_time 
         else:
@@ -251,7 +251,7 @@ class GA:
     
     # Calculate path distance (with path)
     # - Calculate the total distance for the provided path
-    def calculate_path_distance(self, path: List[City]) -> int:
+    def calculate_path_distance(self, path: List[City]) -> float:
         total_distance = 0
         for i in range(len(path) - 1):
             dist = self.map.get_dist_by_city_names(path[i].name, path[i + 1].name)
@@ -262,7 +262,7 @@ class GA:
     # - Set the tournament size to five (five parents will be compare)
     # - Select the most fit parents from the five racers 
     # - Return with the most fit parents (population size many parents)
-    def select_parents(self, population: List[City], fitness_scores: List[int]) -> List[City]:
+    def select_parents(self, population: List[City], fitness_scores: List[float]) -> List[City]:
         tournament_size = 5 if len(population) > 5 else len(population)
         selected_parents = []
         for _ in range(len(population)):
