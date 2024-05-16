@@ -7,18 +7,16 @@ from map import MapFileManager
 from traveling_salesman_problem import TSP, SolverStopException
 from traveling_salesman_problem import InvalidStartCityError, InvalidMapError, InvalidProvidedValueError
 
-# ToDo: Make GUI more readable
-# ToDo: Add comment to GUI
-# ToDo: Update readme on GitHub
-# ToDo: Create diagramms
-
 class AppTSP(tk.Tk):
     def __init__(self, map_file_path: str) -> None:
         super().__init__()
+        # Set title for the window
         self.title("TSP - Traveling Salsman Problem")
 
+        # Setup protocol for exit
         self.protocol("WM_DELETE_WINDOW", self.on_close)
         
+        # Setup logic
         with MapFileManager(file_path=map_file_path) as map_file_manager:
             map_file_manager.create_map_from_file()
             complete_map = map_file_manager.get_map()
@@ -27,16 +25,19 @@ class AppTSP(tk.Tk):
         self.calc_running = False
         self.calc_thread = None
 
+        # Setup GUI
         self.setup_ui()
 
+        # Some update for safe resiziable
         self.update_idletasks()
         self.minsize(self.winfo_width(), self.winfo_height())
 
+    # Setup GUI
     def setup_ui(self):
+        # Basic settings
         primary_color = "gray50"
         secondary_color = "gray70"
         self.padding_size = 15
-
         self.config(bg=primary_color)
 
         # - Left Side
@@ -123,15 +124,17 @@ class AppTSP(tk.Tk):
         stop_btn.config(command = self.stop_tsp)
         stop_btn.pack(side=tk.RIGHT, padx=self.padding_size, pady=self.padding_size, ipadx=self.padding_size)
 
+    # Update cities
     def update_cities(self, *_):
         if self.calc_running == False:
+            # Update start city
             self.tsp_solver.start_city_name = self.start_city_var.get()
             self.tsp_solver.ga_solver.start_city_name = self.start_city_var.get()
-            # Clear
+            # Clear (deactivate all cities)
             self.tsp_solver.map.deactivate_all()
             self.canvas.delete("city")
             self.canvas.delete("path")
-            # Draw
+            # Draw (and activate the active cities)
             num_selected = sum(value.get() for value in self.city_checkbox_values)
             if num_selected > 0:
                 self.max_x = max(city.coord_x for city in self.cities)
@@ -146,6 +149,7 @@ class AppTSP(tk.Tk):
                         color = "green" if self.start_city_var.get() == city.name else "red"
                         self.canvas.create_oval(x - 10, y - 10, x + 10, y + 10, fill=color, outline="black", width=3, tags="city")
 
+    # Draw the path 
     def connect_cities(self, path):
         # Clear
         self.canvas.delete("path")
@@ -160,6 +164,7 @@ class AppTSP(tk.Tk):
             self.canvas.create_line(x1, y1, x2, y2, fill="black", tags="path", width=5)
         self.canvas.tag_raise("city")
 
+    # Start the selected solver on a different thread
     def calculate_path(self, method: str):
         if self.calc_running == False:
             self.calc_running = True
@@ -169,6 +174,7 @@ class AppTSP(tk.Tk):
             else : self.calc_thread = Thread(target=self.run_ga)
             self.calc_thread.start()
 
+    # Solve by Neirest Neighbor
     def run_nn(self):
         try:
             solution = self.tsp_solver.nearest_neighbor()
@@ -178,6 +184,7 @@ class AppTSP(tk.Tk):
             self.calc_running = False
         except Exception as e: self.tsp_solution_handle(exception=e)
 
+    # Solve by Brute Force
     def run_bf(self):
         try:
             solution = self.tsp_solver.brute_force()
@@ -187,6 +194,7 @@ class AppTSP(tk.Tk):
             self.calc_running = False
         except Exception as e: self.tsp_solution_handle(exception=e)
 
+    # Solve by Genetic Algorithm
     def run_ga(self):
         try:
             population_size = int(self.population_size_entry.get())
@@ -199,6 +207,7 @@ class AppTSP(tk.Tk):
             self.calc_running = False
         except Exception as e: self.tsp_solution_handle(exception=e)
 
+    # Handle the exceptions for TSP
     def tsp_solution_handle(self, exception: Exception):
         try: raise exception
         except ValueError: 
@@ -220,19 +229,22 @@ class AppTSP(tk.Tk):
             self.elapsed_time_label.config(text=f"Elapsed Time: 0.00 seconds")
         finally:
             self.calc_running = False
-        
+    
+    # Update estimated time label
     def update_estimated_remaining_time(self):
         if self.calc_running == True: 
             est_time_remaining = self.tsp_solver.get_estimated_remaining_time()
             self.elapsed_time_label.config(text=f"Estimated Remaining Time: {est_time_remaining:.2f} seconds")
             self.after(100, self.update_estimated_remaining_time)
 
+    # Stop the tsp
     def stop_tsp(self):
         if self.calc_running == True:
             self.tsp_solver.stop_solver()
             self.calc_running = False
             self.elapsed_time_label.config(text=f"Elapsed Time: 0.00 seconds")
 
+    # Handle what happen when close the window
     def on_close(self):
         self.tsp_solver.stop_solver()
         if self.calc_thread != None: self.calc_thread.join()
