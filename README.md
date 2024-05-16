@@ -16,13 +16,19 @@ Genetic Algorithms (GAs) are population-based optimization techniques inspired b
 
 ## Diagrams
 
+This repository contains designed diagrams for class, sequence, and use case, which help in understanding the structure and behavior of the application.
+
 ### Class Diagram
+
+This diagram provides a static view of the system, illustrating the structure of the application by showing the classes, their attributes, methods, and the relationships among them.
 
 <p align="center">
    <img src="images/class_diagramm.png" width="90%" />
 </p>
 
 ### Sequence Diagram
+
+The sequence diagram provides a dynamic view of the system, illustrating the process interactions arranged in a time sequence. It demonstrates how a user starts the application, selects cities, chooses an algorithm, runs the algorithm, displays results, optionally stops the calculation, and finally closes the application.
 
 <p align="center">
    <img src="images/sequence_diagramm.png" width="90%" /> 
