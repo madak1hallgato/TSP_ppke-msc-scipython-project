@@ -51,7 +51,7 @@ The console application activates a random number of cities and runs each method
 The GUI mode allows users to select cities from a list and run a TSP algorithm. The GUI displays the selected cities and the calculated path. Underneath the graph, an estimated remaining runtime is shown, and users can stop the calculation anytime using the stop button.
 
 <p align="center">
-   <img src="demo_images/gui_demo.png" width="90%"> 
+   <img src="images/gui_demo.png" width="90%"> 
 </p>
 
 ## Results
