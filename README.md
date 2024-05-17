@@ -34,6 +34,14 @@ The sequence diagram provides a dynamic view of the system, illustrating the pro
    <img src="images/sequence_diagramm.png" width="100%" /> 
 </p>
 
+### Use-Case Diagram
+
+This diagram depicts the functional requirements of the system and the interactions between user (actor) and the system itself. It highlights the various use cases, such as selecting cities, running a TSP, stopping the calculation, etc.
+
+<p align="center">
+   <img src="images/use_case_diagramm.png" width="100%" /> 
+</p>
+
 ## Dependencies
 
 Before running the program, ensure you have the following modules installed:
